@@ -1,4 +1,4 @@
-````md
+```
 # Payments API
 
 Payment acceptance and payout service built with FastAPI.  
@@ -10,7 +10,7 @@ Supports payins, payouts, refunds, webhooks, and protection against duplicate re
 
 - REST API with Swagger documentation  
 - Bearer authentication  
-- Idempotency via `Idempotency-Key`  
+- Idempotency via Idempotency-Key  
 - Webhook signature verification (HMAC-SHA256)  
 - Unified payment and payout statuses  
 - Data validation with Pydantic  
@@ -20,14 +20,14 @@ Supports payins, payouts, refunds, webhooks, and protection against duplicate re
 
 ## 2. Key Mechanisms Explained
 
-### Idempotency via `Idempotency-Key`
+### Idempotency via Idempotency-Key
 
 If a client sends a payment creation request twice due to a network failure, without protection two identical payments could be created.
 
 Solution:
 
 - the client generates a unique key  
-- sends it in the `Idempotency-Key` header  
+- sends it in the Idempotency-Key header  
 - the server stores the operation result  
 - if the same key is used again, the server returns the same response without creating a new object
 
@@ -37,7 +37,7 @@ Rules:
 - same key + different body → 409 error  
 - new key → new operation
 
-Guarantee: **one key = one payment**.
+Guarantee: one key = one payment.
 
 ---
 
@@ -49,8 +49,8 @@ To prevent fake requests:
 
 1. the sender takes the raw JSON body  
 2. calculates a signature  
-   `HMAC_SHA256(WEBHOOK_SECRET, raw_body)`  
-3. puts it into the `X-Signature` header
+   HMAC_SHA256(WEBHOOK_SECRET, raw_body)  
+3. puts it into the X-Signature header
 
 The server performs the same calculation and compares the signatures.  
 If they do not match — the request is rejected.
@@ -61,13 +61,13 @@ If they do not match — the request is rejected.
 
 In real life a payment passes through stages:
 
-`pending → processing → succeeded / failed`
+pending → processing → succeeded / failed
 
 For development there is a mode:
 
-`AUTO_SUCCEED_DEMO=true`
+AUTO_SUCCEED_DEMO=true
 
-In this mode all operations immediately become `succeeded`, allowing integration testing without real providers.
+In this mode all operations immediately become succeeded, allowing integration testing without real providers.
 
 ---
 
@@ -75,38 +75,28 @@ In this mode all operations immediately become `succeeded`, allowing integration
 
 ### Clone
 
-```
 git clone <repo>
 cd payments-api
-```
 
 ### Dependencies
 
-```
 pip install -e .
-```
 
 ### Environment Variables
 
-Create `.env`:
+Create .env:
 
-```
 API_KEY=dev_secret_key
 WEBHOOK_SECRET=webhook_secret
 AUTO_SUCCEED_DEMO=true
-```
 
 Load:
 
-```
 export $(cat .env | xargs)
-```
 
 ### Run
 
-```
 make run
-```
 
 Documentation:  
 http://127.0.0.1:8000/docs
@@ -117,9 +107,7 @@ http://127.0.0.1:8000/docs
 
 All requests require:
 
-```
 Authorization: Bearer <API_KEY>
-```
 
 ---
 
@@ -127,19 +115,16 @@ Authorization: Bearer <API_KEY>
 
 ### Create
 
-**POST /v1/payin**
+POST /v1/payin
 
 Headers:
 
-```
 Authorization: Bearer dev_secret_key
 Idempotency-Key: 11111111-1111-1111-1111-111111111111
 Content-Type: application/json
-```
 
 Body:
 
-```json
 {
   "amount": "1000",
   "currency": "EUR",
@@ -155,36 +140,32 @@ Body:
     }
   }
 }
-```
 
 ### Get
 
-`GET /v1/payin/{payment_id}`
+GET /v1/payin/{payment_id}
 
 ### Cancel
 
-`POST /v1/payin/{payment_id}/cancel`
+POST /v1/payin/{payment_id}/cancel
 
 ---
 
 ## 6. REFUND
 
-`POST /v1/payin/{payment_id}/refunds`
+POST /v1/payin/{payment_id}/refunds
 
-```json
 {
   "amount": "500",
   "reason": "customer_request"
 }
-```
 
 ---
 
 ## 7. PAYOUT
 
-`POST /v1/payout`
+POST /v1/payout
 
-```json
 {
   "amount": "2500",
   "currency": "EUR",
@@ -197,7 +178,6 @@ Body:
     }
   }
 }
-```
 
 ---
 
@@ -205,18 +185,15 @@ Body:
 
 ### Endpoint
 
-`POST /v1/webhooks/events`
+POST /v1/webhooks/events
 
 Headers:
 
-```
 X-Event-Id: evt_...
 X-Signature: <hex or base64>
-```
 
 ### Event Format
 
-```json
 {
   "id": "evt_1",
   "type": "payment.updated",
@@ -229,13 +206,10 @@ X-Signature: <hex or base64>
     }
   }
 }
-```
 
 ### Signature Generation
 
-```
 echo '{...}' | python tools/sign_webhook.py
-```
 
 ---
 
@@ -262,14 +236,12 @@ Refunds:
 
 ## 10. Error Format
 
-```json
 {
   "error": {
     "code": "validation_error",
     "message": "Invalid field"
   }
 }
-```
 
 ---
 
@@ -277,7 +249,6 @@ Refunds:
 
 ### Successful Payin
 
-```mermaid
 sequenceDiagram
   participant M as Merchant
   participant API as Payments API
@@ -291,11 +262,9 @@ sequenceDiagram
 
   M->>API: GET status
   API-->>M: succeeded
-```
 
 ### Idempotency Protection
 
-```mermaid
 sequenceDiagram
   participant M as Merchant
   participant API as Payments API
@@ -308,7 +277,6 @@ sequenceDiagram
 
   M->>API: POST (Key=K, different body)
   API-->>M: 409
-```
 
 ---
 
@@ -316,7 +284,6 @@ sequenceDiagram
 
 ### Python
 
-```python
 import httpx, uuid
 
 headers = {
@@ -324,22 +291,19 @@ headers = {
   "Idempotency-Key": str(uuid.uuid4())
 }
 
-r = httpx.post("http://127.0.0.1:8000/v1/payin", json={...}, headers=headers)
+r = httpx.post("http://127.0.0.1:8000/v1/payin", json={}, headers=headers)
 print(r.json())
-```
 
 ### JavaScript
 
-```javascript
 await fetch("/v1/payin", {
   method: "POST",
   headers: {
     "Authorization": "Bearer dev_secret_key",
     "Idempotency-Key": crypto.randomUUID()
   },
-  body: JSON.stringify({...})
+  body: JSON.stringify({})
 })
-```
 
 ---
 
@@ -347,9 +311,9 @@ await fetch("/v1/payin", {
 
 1. No Idempotency-Key → duplicate payments  
 2. Signature verification not using raw body → webhooks rejected  
-3. Using float for amount → must be string "1055"  
+3. Using float for amount → must be string 1055  
 4. Trusting only return_url → truth is only webhook  
-5. Storing full PAN → forbidden, only masked
+5. Storing full PAN → forbidden, only masked  
 
 ---
 
@@ -365,13 +329,11 @@ await fetch("/v1/payin", {
 
 ## 15. Tests
 
-```
 make test
-```
 
 ---
 
 ## 16. License
 
 MIT
-````
+```
